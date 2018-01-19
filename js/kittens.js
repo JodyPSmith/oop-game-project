@@ -1,21 +1,30 @@
+/* 
+replace sprites with kids faces and randomize out of the 4. Replace background too and scroll it down 
+slowly for movement affect. Enable God Mode button (to prevent death). Enable choice of player (change sprite)
+*/
+
 // This sectin contains some game constants. It is not super interesting
-var GAME_WIDTH = 375;
-var GAME_HEIGHT = 500;
+var GAME_WIDTH = 1200;
+var GAME_HEIGHT = 800;
 
 var ENEMY_WIDTH = 75;
 var ENEMY_HEIGHT = 156;
-var MAX_ENEMIES = 3;
+var MAX_ENEMIES = 8;
 
 var PLAYER_WIDTH = 75;
-var PLAYER_HEIGHT = 54;
+var PLAYER_HEIGHT = 75;
 
-// These two constants keep us from using "magic numbers" in our code
+// These two constants keep us from using "magic numbers" in our code, I add up and down arrow codes
 var LEFT_ARROW_CODE = 37;
 var RIGHT_ARROW_CODE = 39;
+var DOWN_ARROW_CODE = 40;
+var UP_ARROW_CODE = 38;
 
-// These two constants allow us to DRY
+// These two constants allow us to DRIVE - I added up and down
 var MOVE_LEFT = 'left';
 var MOVE_RIGHT = 'right';
+var MOVE_UP = 'up';
+var MOVE_DOWN = 'down';
 
 // Preload game images
 var images = {};
@@ -26,12 +35,17 @@ var images = {};
 });
 
 
-
-
+// fun fact, Parent classes need to be above children.
+class Render {
+    render(ctx) {
+        ctx.drawImage(this.sprite, this.x, this.y);
+    }
+}
 
 // This section is where you will be doing most of your coding
-class Enemy {
+class Enemy extends Render {
     constructor(xPos) {
+        super();
         this.x = xPos;
         this.y = -ENEMY_HEIGHT;
         this.sprite = images['enemy.png'];
@@ -44,36 +58,30 @@ class Enemy {
         this.y = this.y + timeDiff * this.speed;
     }
 
-    render(ctx) {
-        ctx.drawImage(this.sprite, this.x, this.y);
-    }
 }
 
-class Player {
+class Player extends Render {
     constructor() {
+        super();
         this.x = 2 * PLAYER_WIDTH;
-        this.y = GAME_HEIGHT - PLAYER_HEIGHT - 10;
+        this.y = GAME_HEIGHT - PLAYER_HEIGHT - 10 ;
         this.sprite = images['player.png'];
     }
 
-    // This method is called by the game engine when left/right arrows are pressed
+    // This method is called by the game engine when left/right arrows are pressed. I added up down for fun
     move(direction) {
         if (direction === MOVE_LEFT && this.x > 0) {
             this.x = this.x - PLAYER_WIDTH;
         }
         else if (direction === MOVE_RIGHT && this.x < GAME_WIDTH - PLAYER_WIDTH) {
             this.x = this.x + PLAYER_WIDTH;
+        } else if (direction === MOVE_UP && this.y > 0) {
+            this.y = this.y - PLAYER_HEIGHT;
+        } else if (direction === MOVE_DOWN && this.y < GAME_HEIGHT - PLAYER_HEIGHT) {
+            this.y = this.y + PLAYER_HEIGHT;
         }
     }
-
-    render(ctx) {
-        ctx.drawImage(this.sprite, this.x, this.y);
-    }
 }
-
-
-
-
 
 /*
 This section is a tiny game engine.
@@ -84,7 +92,7 @@ class Engine {
     constructor(element) {
         // Setup the player
         this.player = new Player();
-
+        
         // Setup enemies, making sure there are always three
         this.setupEnemies();
 
@@ -107,24 +115,27 @@ class Engine {
     setupEnemies() {
         if (!this.enemies) {
             this.enemies = [];
-        }
+            console.log(this.enemies);        }
 
         while (this.enemies.filter(e => !!e).length < MAX_ENEMIES) {
+            //console.log();
             this.addEnemy();
         }
     }
 
     // This method finds a random spot where there is no enemy, and puts one in there
     addEnemy() {
-        var enemySpots = GAME_WIDTH / ENEMY_WIDTH;
-
+        var enemySpots = (GAME_WIDTH / ENEMY_WIDTH) + 1; //added +1 here to increase the array slots
         var enemySpot;
         // Keep looping until we find a free enemy spot at random
         while (!enemySpot || this.enemies[enemySpot]) {
             enemySpot = Math.floor(Math.random() * enemySpots);
+            //console.log("in while loop " + enemySpot);
+            //console.log(enemySpot);
         }
-
-        this.enemies[enemySpot] = new Enemy(enemySpot * ENEMY_WIDTH);
+        
+        this.enemies[enemySpot] = new Enemy(enemySpot * ENEMY_WIDTH - ENEMY_WIDTH); // did a - enemy width to start at x=0
+        //console.log(enemySpot * ENEMY_WIDTH);
     }
 
     // This method kicks off the game
@@ -132,13 +143,16 @@ class Engine {
         this.score = 0;
         this.lastFrame = Date.now();
 
-        // Listen for keyboard left/right and update the player
+        // Listen for keyboard left/right and update the player. I've added up and down as global vars
         document.addEventListener('keydown', e => {
             if (e.keyCode === LEFT_ARROW_CODE) {
                 this.player.move(MOVE_LEFT);
-            }
-            else if (e.keyCode === RIGHT_ARROW_CODE) {
+            } else if (e.keyCode === RIGHT_ARROW_CODE) {
                 this.player.move(MOVE_RIGHT);
+            } else if (e.keyCode === UP_ARROW_CODE) {
+                this.player.move(MOVE_UP);
+            } else if (e.keyCode === DOWN_ARROW_CODE) {
+                this.player.move(MOVE_DOWN);
             }
         });
 
@@ -160,8 +174,8 @@ class Engine {
         var currentFrame = Date.now();
         var timeDiff = currentFrame - this.lastFrame;
 
-        // Increase the score!
-        this.score += timeDiff;
+        // Increase the score! - This is the high Score version :)
+        this.score += timeDiff * 10;
 
         // Call update on all enemies
         this.enemies.forEach(enemy => enemy.update(timeDiff));
@@ -188,19 +202,40 @@ class Engine {
         }
         else {
             // If player is not dead, then draw the score
-            this.ctx.font = 'bold 30px Impact';
-            this.ctx.fillStyle = '#ffffff';
-            this.ctx.fillText(this.score, 5, 30);
+            this.ctx.font = 'bold 50px Impact';
+            this.ctx.fillStyle = '#ff0000';
+            this.ctx.fillText(this.score, 5, 50);
 
             // Set the time marker and redraw
             this.lastFrame = Date.now();
             requestAnimationFrame(this.gameLoop);
         }
     }
-
+    
     isPlayerDead() {
         // TODO: fix this function!
-        return false;
+        // if any enemys x,y crosses over the players xy then the player is dead.
+        // if (enemy.y == player.y && enemy.x == player.x) {
+        //     return true;
+        // }
+        // if (this.player.x === )
+        var dead = this.enemies.some((enemy) => {
+            console.log(this.enemies);
+            //console.log((Math.round(enemy.y) + ENEMY_HEIGHT) + " " + enemy.x + " " + this.player.y + " " + this.player.x)
+            if (enemy.y + ENEMY_HEIGHT > this.player.y && enemy.x === this.player.x) {
+                console.log("dead");
+                
+                return true;
+                //delete this.enemies[enemyIdx];
+            } else {
+                return false;
+            }
+            
+        });
+        return dead;
+
+        
+
     }
 }
 
