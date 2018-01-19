@@ -1,6 +1,6 @@
 /* 
-replace sprites with kids faces and randomize out of the 4. Replace background too and scroll it down 
-slowly for movement affect. Enable God Mode button (to prevent death). Enable choice of player (change sprite)
+Crypto Grab
+Enable choice of player (change sprite). Change score to increment if fiat is grabbed, and remove then (as well as at bottom of screen).
 */
 
 // This sectin contains some game constants. It is not super interesting
@@ -115,7 +115,8 @@ class Engine {
     setupEnemies() {
         if (!this.enemies) {
             this.enemies = [];
-            console.log(this.enemies);        }
+            //console.log(this.enemies);        
+        }
 
         while (this.enemies.filter(e => !!e).length < MAX_ENEMIES) {
             //console.log();
@@ -125,16 +126,16 @@ class Engine {
 
     // This method finds a random spot where there is no enemy, and puts one in there
     addEnemy() {
-        var enemySpots = (GAME_WIDTH / ENEMY_WIDTH) + 1; //added +1 here to increase the array slots
+        var enemySpots = (GAME_WIDTH / ENEMY_WIDTH) ; //added +1 here to increase the array slots + 1
         var enemySpot;
         // Keep looping until we find a free enemy spot at random
-        while (!enemySpot || this.enemies[enemySpot]) {
+        while (this.enemies[enemySpot]) {
             enemySpot = Math.floor(Math.random() * enemySpots);
             //console.log("in while loop " + enemySpot);
             //console.log(enemySpot);
         }
         
-        this.enemies[enemySpot] = new Enemy(enemySpot * ENEMY_WIDTH - ENEMY_WIDTH); // did a - enemy width to start at x=0
+        this.enemies[enemySpot] = new Enemy(enemySpot * ENEMY_WIDTH ); // did a - enemy width to start at x=0 - ENEMY_WIDTH
         //console.log(enemySpot * ENEMY_WIDTH);
     }
 
@@ -215,32 +216,16 @@ class Engine {
     isPlayerDead() {
         // TODO: fix this function!
         // if any enemys x,y crosses over the players xy then the player is dead.
-        // if (enemy.y == player.y && enemy.x == player.x) {
-        //     return true;
-        // }
-        // if (this.player.x === )
         var dead = this.enemies.some((enemy) => {
-            console.log(this.enemies);
-            //console.log((Math.round(enemy.y) + ENEMY_HEIGHT) + " " + enemy.x + " " + this.player.y + " " + this.player.x)
-            if (enemy.y + ENEMY_HEIGHT > this.player.y && enemy.x === this.player.x) {
-                console.log("dead");
-                
+            // console.log(this.enemies);
+            // if the bottom of the enemy y is bigger than the top of player y & the top of the enemy y is smaller than the bottom of the player y & the x is the same. 
+            if (enemy.y + ENEMY_HEIGHT > this.player.y && enemy.y < this.player.y + (0.75 * PLAYER_HEIGHT) && enemy.x === this.player.x) {
                 return true;
-                //delete this.enemies[enemyIdx];
-            } else {
-                return false;
             }
-            
         });
         return dead;
-
-        
-
     }
 }
-
-
-
 
 
 // This section will start the game

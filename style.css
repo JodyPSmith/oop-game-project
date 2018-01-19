@@ -1,7 +1,9 @@
 body {
-    background : #07ad73;
+    background : #04b333;
     min-width: 1200px;
-    font-family: 'Lato' , sans-serif
+    font-family: 'Lato' , sans-serif;
+    text-align: center;
+    color: white;
 }
 
 .game {
@@ -21,7 +23,8 @@ body {
     padding: 1vh;
     width : 10vw;
     border : solid;
-    border-color : black;
+    background : #d9169f;
+    border-color : #d9169f;
     border-radius : 10%
 }
 
@@ -29,6 +32,10 @@ body {
     margin : 1vh;
     padding: 1vh;
     width : 10vw;
+    border : solid;
+    background : #d9169f;
+    border-color : #d9169f;
+    border-radius : 10%
    
 }
 }
