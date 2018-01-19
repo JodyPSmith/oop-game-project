@@ -1,6 +1,9 @@
 /* 
 Crypto Grab
-Enable choice of player (change sprite). Change score to increment if fiat is grabbed, and remove then (as well as at bottom of screen).
+Spacebar Restart.
+Enable choice of player (change sprite). Change score to increment if fiat is grabbed, and remove then 
+(as well as at bottom of screen). Add concept of 3 lives. Increasing difficulty based on score 
+(multiple speed by score/100), multiply enemies by score as well?
 */
 
 // This sectin contains some game constants. It is not super interesting
@@ -9,16 +12,18 @@ var GAME_HEIGHT = 800;
 
 var ENEMY_WIDTH = 75;
 var ENEMY_HEIGHT = 156;
-var MAX_ENEMIES = 8;
+var MAX_ENEMIES = 11;
 
 var PLAYER_WIDTH = 75;
 var PLAYER_HEIGHT = 75;
+var PLAYER_LIVES = 3;
 
 // These two constants keep us from using "magic numbers" in our code, I add up and down arrow codes
 var LEFT_ARROW_CODE = 37;
 var RIGHT_ARROW_CODE = 39;
 var DOWN_ARROW_CODE = 40;
 var UP_ARROW_CODE = 38;
+var SPACE_BAR = 32;
 
 // These two constants allow us to DRIVE - I added up and down
 var MOVE_LEFT = 'left';
@@ -28,12 +33,15 @@ var MOVE_DOWN = 'down';
 
 // Preload game images
 var images = {};
-['enemy.png', 'stars.png', 'player.png'].forEach(imgName => {
+['enemy.png', 'stars.png', 'player.png', 'lives.png'].forEach(imgName => {
     var img = document.createElement('img');
     img.src = 'images/' + imgName;
     images[imgName] = img;
 });
 
+// Play those funky beats
+var audio = new Audio('bg_music.mp3');
+audio.play();
 
 // fun fact, Parent classes need to be above children.
 class Render {
@@ -60,11 +68,21 @@ class Enemy extends Render {
 
 }
 
+class Lives extends Render {
+    constructor(lives) { //need to pass PLAYER_LIVES in here as lives
+        super();
+        this.x = lives + GAME_WIDTH - 250; // put lives sprite on right and shift left 20 + # of lives each time
+        console.log(lives);
+        this.y = 20;
+        this.sprite = images['lives.png'];
+    }
+}
+
 class Player extends Render {
     constructor() {
         super();
-        this.x = 2 * PLAYER_WIDTH;
-        this.y = GAME_HEIGHT - PLAYER_HEIGHT - 10 ;
+        this.x = 7 * PLAYER_WIDTH;
+        this.y = GAME_HEIGHT - PLAYER_HEIGHT - 10;
         this.sprite = images['player.png'];
     }
 
@@ -72,8 +90,7 @@ class Player extends Render {
     move(direction) {
         if (direction === MOVE_LEFT && this.x > 0) {
             this.x = this.x - PLAYER_WIDTH;
-        }
-        else if (direction === MOVE_RIGHT && this.x < GAME_WIDTH - PLAYER_WIDTH) {
+        } else if (direction === MOVE_RIGHT && this.x < GAME_WIDTH - PLAYER_WIDTH) {
             this.x = this.x + PLAYER_WIDTH;
         } else if (direction === MOVE_UP && this.y > 0) {
             this.y = this.y - PLAYER_HEIGHT;
@@ -82,6 +99,8 @@ class Player extends Render {
         }
     }
 }
+
+
 
 /*
 This section is a tiny game engine.
@@ -92,9 +111,12 @@ class Engine {
     constructor(element) {
         // Setup the player
         this.player = new Player();
-        
-        // Setup enemies, making sure there are always three
+
+        // Setup enemies, making sure there are however many specified
         this.setupEnemies();
+
+        // Setup Lives, making sure we start with three
+        this.setupLives();
 
         // Setup the <canvas> element where we will be drawing
         var canvas = document.createElement('canvas');
@@ -112,6 +134,30 @@ class Engine {
      The game allows for 5 horizontal slots where an enemy can be present.
      At any point in time there can be at most MAX_ENEMIES enemies otherwise the game would be impossible
      */
+
+    setupLives() {
+        if (!this.lives) {
+            this.lives = [];
+        }
+
+        while (this.lives.filter(e => !!e).length < PLAYER_LIVES) {
+            //console.log();
+            this.addLives();
+        }
+    }
+
+    // drastic copy of adding enemies replacing with lives, need to remove random
+    addLives() {
+        var livesSpots = 3;
+        var lifeSpot;
+        // Keep looping until we find a free life spot at random
+        while (this.lives[lifeSpot]) {
+            lifeSpot = Math.floor(Math.random() * livesSpots);
+        }
+
+        this.lives[lifeSpot] = new Lives(lifeSpot * PLAYER_WIDTH);
+    }
+
     setupEnemies() {
         if (!this.enemies) {
             this.enemies = [];
@@ -126,16 +172,14 @@ class Engine {
 
     // This method finds a random spot where there is no enemy, and puts one in there
     addEnemy() {
-        var enemySpots = (GAME_WIDTH / ENEMY_WIDTH) ; //added +1 here to increase the array slots + 1
+        var enemySpots = (GAME_WIDTH / ENEMY_WIDTH); //added +1 here to increase the array slots + 1
         var enemySpot;
         // Keep looping until we find a free enemy spot at random
         while (this.enemies[enemySpot]) {
             enemySpot = Math.floor(Math.random() * enemySpots);
-            //console.log("in while loop " + enemySpot);
-            //console.log(enemySpot);
         }
-        
-        this.enemies[enemySpot] = new Enemy(enemySpot * ENEMY_WIDTH ); // did a - enemy width to start at x=0 - ENEMY_WIDTH
+
+        this.enemies[enemySpot] = new Enemy(enemySpot * ENEMY_WIDTH); // did a - enemy width to start at x=0 - ENEMY_WIDTH
         //console.log(enemySpot * ENEMY_WIDTH);
     }
 
@@ -185,6 +229,7 @@ class Engine {
         this.ctx.drawImage(images['stars.png'], 0, 0); // draw the star bg
         this.enemies.forEach(enemy => enemy.render(this.ctx)); // draw the enemies
         this.player.render(this.ctx); // draw the player
+        this.lives.forEach(lives => lives.render(this.ctx)); //draw the lives
 
         // Check if any enemies should die
         this.enemies.forEach((enemy, enemyIdx) => {
@@ -195,24 +240,55 @@ class Engine {
         this.setupEnemies();
 
         // Check if player is dead
-        if (this.isPlayerDead()) {
-            // If they are dead, then it's game over!
-            this.ctx.font = 'bold 30px Impact';
-            this.ctx.fillStyle = '#ffffff';
-            this.ctx.fillText(this.score + ' GAME OVER', 5, 30);
-        }
-        else {
+        if (this.isPlayerDead() && PLAYER_LIVES == 0) {
+            // If no more lives then really dead, then it's game over!
+            this.ctx.font = 'bold 60px Impact';
+            this.ctx.fillStyle = '#ff0000';
+            this.ctx.fillText("YOU SCORED " + this.score + ' AND CRASHED!!', 200, GAME_HEIGHT / 2);
+            this.ctx.fillText('GAME OVER', 450, GAME_HEIGHT / 2 + 100);
+            this.ctx.fillText('GO BACK TO YOUR DAY JOB', 275, GAME_HEIGHT / 2 + 200);
+
+        } else if (this.isPlayerDead() && PLAYER_LIVES > 0) {
+            // this is lost lives but not dead area
+            this.ctx.font = 'bold 50px Impact';
+            this.ctx.fillStyle = '#ff0000';
+            this.ctx.fillText("SCORE: " + this.score, 20, 75);
+            this.ctx.fillText("LIVES: ", GAME_WIDTH - 375, 75)
+            this.ctx.fillText('MARKET CRASH !', 450, GAME_HEIGHT / 2 );
+            this.ctx.fillText('PRESS SPACE TO TRY AGAIN', 350, GAME_HEIGHT / 2 + 100);
+            
+            document.addEventListener('keydown', e => {
+                if (e.keyCode === SPACE_BAR) {
+                    // Reduce the players lives by 1
+                    PLAYER_LIVES -= 1; 
+                    console.log(PLAYER_LIVES);
+                    // Wipe out enemies
+                    this.enemies.forEach((enemy, enemyIdx) => {
+                        if (enemy.y > 1) {
+                            delete this.enemies[enemyIdx];
+                        }
+                    });
+                    // retart the loop
+                    this.lastFrame = Date.now();
+                    requestAnimationFrame(this.gameLoop);
+                } 
+            });
+    
+            // Set the time marker and redraw
+
+        } else {
             // If player is not dead, then draw the score
             this.ctx.font = 'bold 50px Impact';
             this.ctx.fillStyle = '#ff0000';
-            this.ctx.fillText(this.score, 5, 50);
+            this.ctx.fillText("SCORE: " + this.score, 20, 75);
+            this.ctx.fillText("LIVES: ", GAME_WIDTH - 375, 75)
 
             // Set the time marker and redraw
             this.lastFrame = Date.now();
             requestAnimationFrame(this.gameLoop);
         }
     }
-    
+
     isPlayerDead() {
         // TODO: fix this function!
         // if any enemys x,y crosses over the players xy then the player is dead.
@@ -231,3 +307,17 @@ class Engine {
 // This section will start the game
 var gameEngine = new Engine(document.getElementById('app'));
 gameEngine.start();
+
+// I'm dead, so if I press the space bar restart
+// document.addEventListener('keydown', e => {
+//     if (e.keyCode === SPACE_BAR) {
+//         this.ctx.font = 'bold 50px Impact';
+//         this.ctx.fillStyle = '#ff0000';
+//         this.ctx.fillText("SCORE: " + this.score, 20, 75);
+//         this.ctx.fillText("LIVES: ", GAME_WIDTH - 375, 75)
+
+//         // Set the time marker and redraw
+//         this.lastFrame = Date.now();
+//         requestAnimationFrame(this.gameLoop);
+//     }
+// });

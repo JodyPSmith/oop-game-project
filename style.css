@@ -3,7 +3,7 @@ body {
     min-width: 1200px;
     font-family: 'Lato' , sans-serif;
     text-align: center;
-    color: white;
+    
 }
 
 .game {
@@ -23,9 +23,10 @@ body {
     padding: 1vh;
     width : 10vw;
     border : solid;
-    background : #d9169f;
-    border-color : #d9169f;
-    border-radius : 10%
+    background : #ffc72e;
+    border-color : #ffc72e;
+    border-radius : 10%;
+    color: white;
 }
 
 #restart {
@@ -33,9 +34,10 @@ body {
     padding: 1vh;
     width : 10vw;
     border : solid;
-    background : #d9169f;
-    border-color : #d9169f;
-    border-radius : 10%
+    background : #ffc72e;
+    border-color : #ffc72e;
+    border-radius : 10%;
+    color: white;
    
 }
 }
