@@ -35,6 +35,9 @@ Each team will go in front of the class with their laptop and show the rest of t
 ### 1. Let's fix the enemy bug
 If you look at the game running for a while, you will notice that an enemy never appears at the far left of the screen. This is due to a bug that was intentionally introduced in the `addEnemy` method of the `Engine` class. Find the bug and fix it.
 
+// Finally figured it out, had to increase the number of array columns returned 
+// (+ 1 to var enemySpots = (GAME_WIDTH ENEMY_WIDTH) + 1;) AND ALSO reduce the xpos starting point by 75(enemy width px)
+
 ### 2. Let's make the game actually end
 If a Nyan Cat gets to you and eats you, the game keeps going on. Let's fix this!
 
@@ -50,6 +53,8 @@ A good strategy would be to console.log both this.player and this.enemies. When 
 
 As a hint, note that the box of each enemy is defined by its `x` and `y` coordinates and the `ENEMY_WIDTH` and `ENEMY_HEIGHT` constants. There are similar variables for the player.
 
+// Define the player box, use the array function some() to go through the enemies array and check their cordinates 
+
 ### 3. Let's do some refactoring!
 Look at the `Player` and `Enemy` classes and notice that their `render` methods are identical. This violates our sacred DRY principle. Let's fix it!
 
@@ -59,15 +64,17 @@ Then, we'll make `Player` and `Enemy` extend the `Entity` class, and remove the 
 
 Having done this manipulation will break our constructors. Make sure to fix it by calling the appropriate function from your constructors.
 
+// This was relatively easy
+
 ### 4. Flavor it!
 
 ---
 
-## 5. The sky is not the limit :sunglasses:
+## The sky is not the limit :sunglasses:
 Having completed the basic section of this project is already great! However, this should leave you plenty of time for the fun part: customizing and evolving the game. Since this is an open-ended activity, we will give you some suggestions. Feel free to use them or not.
 
 * Instead of completely stopping the game when it's over, allow the player to start a new game
-* Add a sound track and sound effects to the game
+* Add a sound track and sound effects to the game (and loop)
 * Add the possibility of having lives
 * Increase the difficulty level of the game as time passes by making the enemies go faster
 * Allow the enemies and player to have animated sprites instead of the current static ones. You could do this by defining a sprite as an array of images and setting a speed at which these images should switch. This could be implemented in the `render` method.
@@ -75,6 +82,3 @@ Having completed the basic section of this project is already great! However, th
 * Add another type of entity called `Bonus` that will also fall from the sky and add points to the score
 * Make the game more hardcore by allowing the player to also move up/down and making Nyan Cats also shoot from the left of the screen
 * **Don't stop!** These suggestions are only here to get you started :)
-
-### 6. Submission
-Submission before 9PM on Monday. You will make a 30 second recording using OBS. [Instructions on using OBS](https://docs.google.com/document/d/1ATihbD7BEzqAZoGkZTtZwDHJjTtTkdCEbYTg7eaFnO4/edit?usp=sharing). You will then upload the video on youtube and then place the link in the #cohort-11-oop-videos slack channel. All the videos will be presented by the teacher on Tuesday starting 10:00AM. If your video link is not in the channel by that time, it will not be presented.

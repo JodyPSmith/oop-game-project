@@ -1,18 +1,35 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="js/pageButtons.js"></script>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css?family=Lato:300,400" rel="stylesheet"> 
+    <link href="https://fonts.googleapis.com/css?family=Lato:300,400" rel="stylesheet">
     <title>Awesome Games</title>
 </head>
+
 <body>
-    <div class="game" id="app"></div>
-    <script src="js/CryptoGrab.js"></script>
-    <div class="buttons">
-        <button id="god">God Mode Enable</button>
-        <button id="restart">Restart game</button> 
+    <div id="btcPrice">
+        Bitcoin Price Today is $
+        <id="price"></id>
+            <script type="text/javascript">
+                document.write(getBtcPrice());
+            </script>
+            <id="currency"> USD</id>
     </div>
+    <div class="game" id="app"></div>
+    <script id="theGame" src='js/CryptoGrab.js'></script>
+
+    <div class="buttons">
+        <input id="god" type="button" value="God Mode Enable" onclick="enableGodMode();">
+        <input id="Crypto" type="button" value="Crypto Grab" onclick="changeContent('CryptoGrab.js');" />
+        <input id="Terror" type="button" value="Terror Kids" onclick="changeContent('TerrorKids.js');" />
+        <input id="bugs" type="button" value="99bugs" onclick="changeContent('99bugs.js');" />
+        <input id="restart" type="button" value="Restart" onclick="reloadPage();" />
+    </div>
+
 </body>
+
 </html>
