@@ -1,24 +1,31 @@
 /* 
-Crypto Grab MVP
-Multi Enemies (Done)
-Import bitcoin price , set as var right now owuld be nice if it was live (HTML/Javascript done but from var right now.)
-Add Cash Bonus (done)
-Change score to increase only if bonus grabbed, score 100 each time. (done)
-Market crash lose 30% (done)
-Change score to increment if fiat is grabbed, and remove them (as well as at bottom of screen). (done)
-Add concept of 3 lives. (Remove icon at top when loss.) 
-replace image with FUD when collision?
+    Crypto Grab MVP
+    Multiple randomized Enemies (Done)
+    Import bitcoin price , set as var right now would be nice if it was live (HTML/Javascript done but from var right now.)
+    Add Cash Bonus (done)
+    Change score to increase only if bonus grabbed, score 100 each time. (done - set to 1k for demo)
+    Market crash lose 30% (done)
+    Change score to increment if fiat is grabbed, and remove them (as well as at bottom of screen). (done)
+    Add concept of 3 lives. (Remove icon at top when loss.) (done - would be nice to switch image)
+    Winner if you reach Bitcoin price (done)
+    
+    Click Start to begin
+    Click Restart to try again (button in js)
+    Paralax moving "moutain background" looks like graphs
+    
+    Loop Background Music
+    
 
-Couldn't figure out or nice to have
-Paralax moving "moutain background" looks like graphs
-Use Imported bitcoin price , set it as goal and game winner when you meet it, 
-Spacebar Restart bug - once called, the listener will always respond, can't seem to tear it down.
-Change score to increment if fiat is grabbed, and remove them (as well as at bottom of screen). 
+    
+    replace image with FUD when collision?
+    Use Imported bitcoin price , set it as goal and game winner when you meet it, 
+    Spacebar Restart bug - once called, the listener will always respond, can't seem to tear it down. 
+    extra life at 2000 points not working, function at bottom of file (extraLife) and at line ~ 324is to call function
 */
 
 // This sectin contains some game constants. It is not super interesting
 var GAME_WIDTH = 1200;
-var GAME_HEIGHT = 800;
+var GAME_HEIGHT = 700;
 
 var ENEMY_WIDTH = 75;
 var ENEMY_HEIGHT = 100;
@@ -28,7 +35,7 @@ var MAX_ENEMIES = 9;
 var PLAYER_WIDTH = 75;
 var PLAYER_HEIGHT = 75;
 var PLAYER_LIVES = 3;
-
+var START_LIVES = PLAYER_LIVES;
 var BONUS_WIDTH = 75;
 var BONUS_HEIGHT = 156;
 var MAX_BONUS = 4;
@@ -46,17 +53,23 @@ var MOVE_RIGHT = 'right';
 var MOVE_UP = 'up';
 var MOVE_DOWN = 'down';
 
+// Sound effects
+var cheer = new Audio('./audio/cheer.mp3');
+var chaching = new Audio('./audio/chaching.mp3');
+var collision = new Audio('./audio/collision.mp3');
+var boo = new Audio('./audio/boo.mp3');
+var backgroundAudio = new Audio('./audio/bg_music.mp3');
+
 // Preload game images
 var images = {};
-['enemy1.png', 'enemy2.png', 'enemy3.png', 'enemy4.png', 'stars.png', 'player.png', 'lives.png', 'bonus.png'].forEach(imgName => {
+['enemy1.png', 'enemy2.png', 'enemy3.png', 'enemy4.png', 'bg1.png', 'winner.png', 'player.png', 'priceline.png', 'lives.png', 'lifelost.png', 'bonus.png'].forEach(imgName => {
     var img = document.createElement('img');
     img.src = 'images/' + imgName;
     images[imgName] = img;
 });
 
-// Play those funky beats
-var audio = new Audio('bg_music.mp3');
-audio.play();
+// Play those funky background beats.
+backgroundAudio.play();
 
 // fun fact, Parent classes need to be above children.
 class Render {
@@ -68,6 +81,8 @@ class Render {
         this.y = this.y + timeDiff * this.speed;
     }
 }
+
+// 
 
 // This section is where you will be doing most of your coding
 class Enemy extends Render {
@@ -99,7 +114,6 @@ class Lives extends Render {
     constructor(lives) { //need to pass PLAYER_LIVES in here as lives
         super();
         this.x = lives + GAME_WIDTH - 250; // put lives sprite on right and shift left 20 + # of lives each time
-        console.log(lives);
         this.y = 20;
         this.sprite = images['lives.png'];
     }
@@ -181,23 +195,27 @@ class Engine {
             this.lives = [];
         }
 
-        while (this.lives.filter(e => !!e).length < PLAYER_LIVES) {
-            //console.log();
-            this.addLives();
-        }
-    }
-
-    // drastic copy of adding enemies replacing with lives, need to remove random
-    addLives() {
-        var livesSpots = PLAYER_LIVES;
-        var lifeSpot;
-        // Keep looping until we find a free life spot at random
-        while (this.lives[lifeSpot]) {
-            lifeSpot = Math.floor(Math.random() * livesSpots);
+        for (var i = 1; i < PLAYER_LIVES; i++) {
+            this.lives[i] = new Lives(i * PLAYER_WIDTH);
         }
 
-        this.lives[lifeSpot] = new Lives(lifeSpot * PLAYER_WIDTH);
+        // while (this.lives.filter(e => !!e).length < PLAYER_LIVES) {
+        //     //console.log();
+        //     this.addLives();
+        // }
     }
+
+    // // drastic copy of adding enemies replacing with lives, need to remove this whole function
+    // addLives() {
+    //     var livesSpots = PLAYER_LIVES;
+    //     var lifeSpot;
+    //     // Keep looping until we find a free life spot at random
+    //     while (this.lives[lifeSpot]) {
+    //         lifeSpot = Math.floor(Math.random() * livesSpots);
+    //     }
+
+    //     this.lives[lifeSpot] = new Lives(lifeSpot * PLAYER_WIDTH);
+    // }
 
     // drastic copying of the enemies concept to replicate the same array and drop approach
     setupBonuses() {
@@ -287,7 +305,7 @@ class Engine {
         // Increase the score! - This is the earn your money version :)
         // this.score += timeDiff;
         if (this.isPlayerRich()) {
-            this.score += 100;
+            this.score += 1000;
             //console.log
         }
         // Call update on all enemies
@@ -296,8 +314,13 @@ class Engine {
         // Call the same update for my Bonus Moohla
         this.bonuses.forEach(bonus => bonus.update(timeDiff));
 
+
+
+
+
         // Draw everything!
-        this.ctx.drawImage(images['stars.png'], 0, 0); // draw the star bg
+        this.ctx.drawImage(images['bg1.png'], 0, 0); // draw the star bg
+        this.ctx.drawImage(images['priceline.png'], 0, 0);
         this.enemies.forEach(enemy => enemy.render(this.ctx)); // draw the enemies
         this.player.render(this.ctx); // draw the player
         this.lives.forEach(lives => lives.render(this.ctx)); //draw the lives
@@ -319,32 +342,38 @@ class Engine {
         });
         this.setupBonuses();
 
+        // Check if they've earned another life - no worky yet
+        // this.extraLife();
+        
         // Check if player is dead
 
-        if (this.isPlayerDead() && PLAYER_LIVES == 0) {
+        if (this.isPlayerDead() && PLAYER_LIVES == 1) {
             // If no more lives then really dead, then it's game over!
             this.ctx.font = 'bold 60px Impact';
             this.ctx.fillStyle = '#D900D9';
-            this.ctx.fillText("YOU SCORED " + this.score + ' AND CRASHED!!', 200, GAME_HEIGHT / 2);
-            this.ctx.fillText('GAME OVER', 450, GAME_HEIGHT / 2 + 100);
-            this.ctx.fillText('GO BACK TO YOUR DAY JOB', 275, GAME_HEIGHT / 2 + 200);
+            this.ctx.fillText("YOU SCORED $" + this.score + ' AND CRASHED!!', 200, GAME_HEIGHT / 2 - 100);
+            this.ctx.fillText('GAME OVER', 450, GAME_HEIGHT / 2);
+            this.ctx.fillText('GO BACK TO YOUR DAY JOB', 275, GAME_HEIGHT / 2 + 100);
             document.removeEventListener('keydown', spacebar); //doesn't seem to work
+            boo.play();
 
-        } else if (this.isPlayerDead() && PLAYER_LIVES > 0) {
+
+        } else if (this.isPlayerDead() && PLAYER_LIVES > 1) {
             // this is lost lives but not dead area
+            this.wipeOutEverything();
+            // Reduce the players lives by 1
+            this.removeLife();
+
             this.ctx.font = 'bold 50px Impact';
             this.ctx.fillStyle = '#D900D9';
             this.ctx.fillText("SCORE: " + this.score, 20, 75);
             this.ctx.fillText("LIVES: ", GAME_WIDTH - 375, 75)
-            this.ctx.fillText('MARKET CRASH ! YOU LOST 30%', 300, GAME_HEIGHT / 2);
-            this.ctx.fillText('PRESS SPACE TO CONTINUE', 350, GAME_HEIGHT / 2 + 100);
+            this.ctx.fillText('MARKET CRASH ! YOU LOST 30%', 300, GAME_HEIGHT / 2 - 100);
+            this.ctx.fillText('PRESS SPACE TO CONTINUE', 350, GAME_HEIGHT / 2);
             this.score = Math.round(this.score / 100) * 70;
+            collision.play();
 
-            this.wipeOutEverything();
-
-            // Reduce the players lives by 1
-            PLAYER_LIVES -= 1;
-            console.log(PLAYER_LIVES);
+            
 
             var spacebar = e => {
                 if (e.keyCode === SPACE_BAR) {
@@ -357,6 +386,18 @@ class Engine {
 
             // Set the time marker and redraw
 
+        } else if (this.score >= getBtcPrice()) {
+            this.ctx.drawImage(images['winner.png'], 0, 0); // draw the star bg
+            this.ctx.font = 'bold 250px Impact';
+            this.ctx.fillStyle = '#D900D9';
+            this.ctx.fillText('WINNER !!', 100, GAME_HEIGHT / 2 + 100);
+
+            this.ctx.font = 'bold 50px Impact';
+            this.ctx.fillStyle = '#D900D9';
+            this.ctx.fillText('You exceeded the btc price of $' + getBtcPrice() + ' for today', 100, 100);
+            cheer.play();
+            this.wipeOutEverything();
+        
         } else {
             // If player is not dead, then draw the score
             this.ctx.font = 'bold 50px Impact';
@@ -372,7 +413,6 @@ class Engine {
     }
 
     isPlayerDead() {
-        // TODO: fix this function!
         // if any enemys x,y crosses over the players xy then the player is dead.
         var dead = this.enemies.some((enemy) => {
             // console.log(this.enemies);
@@ -390,6 +430,9 @@ class Engine {
         var rich = this.bonuses.some((bonus, bonusIdx) => {
             if (bonus.y + BONUS_HEIGHT > this.player.y && bonus.y < this.player.y + PLAYER_HEIGHT && bonus.x === this.player.x) {
                 delete this.bonuses[bonusIdx];
+                //have to reload the sound before playing it again incase two bonuses are collected at the same time, otherwise it will only play one and the second sounds weird.
+                chaching.load();
+                chaching.play();
                 return true;
             }
         })
@@ -411,6 +454,22 @@ class Engine {
             }
         });
     }
+
+    removeLife () {
+        PLAYER_LIVES -= 1;
+        // this.lives.splice(START_LIVES - PLAYER_LIVES, 1, this.lives.sprite = images['lifelost.png']);
+        delete this.lives[START_LIVES - PLAYER_LIVES] 
+        console.log("After decrement " + PLAYER_LIVES);
+    }
+
+    // extraLife () {
+    //     // Check for extra life every 2000 up to max 3.
+    //     if (PLAYER_LIVES <= 3 && this.score % 2000 == 0) {
+    //         console.log(this.score % 2000);
+    //         PLAYER_LIVES += 1;
+    //         console.log("end of extralife func " + PLAYER_LIVES);
+    //     }
+    // }
 }
 
 
