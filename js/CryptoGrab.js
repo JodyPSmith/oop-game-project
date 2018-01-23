@@ -8,11 +8,14 @@
     Change score to increment if fiat is grabbed, and remove them (as well as at bottom of screen). (done)
     Add concept of 3 lives. (Remove icon at top when loss.) (done - would be nice to switch image)
     Winner if you reach Bitcoin price (done)
-    
+    Paralax type moving "moutain background" looks like graphs (done - doesn't loop)
+
     Click Start to begin
-    Click Restart to try again (button in js)
-    Paralax moving "moutain background" looks like graphs
-    
+    bonus variable for dollars and eth/neo
+    cartoonify enemies?
+    instructions on side div?
+    mining blitz (double bonus for x seconds?)
+    Click Restart to try again (button in js instead of html)
     Loop Background Music
     
 
@@ -28,7 +31,7 @@ var GAME_WIDTH = 1200;
 var GAME_HEIGHT = 700;
 
 var ENEMY_WIDTH = 75;
-var ENEMY_HEIGHT = 100;
+var ENEMY_HEIGHT = 125;
 var MAX_ENEMIES = 9;
 
 
@@ -36,9 +39,11 @@ var PLAYER_WIDTH = 75;
 var PLAYER_HEIGHT = 75;
 var PLAYER_LIVES = 3;
 var START_LIVES = PLAYER_LIVES;
+
 var BONUS_WIDTH = 75;
 var BONUS_HEIGHT = 156;
-var MAX_BONUS = 4;
+var MAX_BONUS = 7;
+var BONUS_FLOOR = 100;
 
 // These constants keep us from using "magic numbers" in our code, I add up and down arrow codes and space to use a life
 var LEFT_ARROW_CODE = 37;
@@ -62,7 +67,7 @@ var backgroundAudio = new Audio('./audio/bg_music.mp3');
 
 // Preload game images
 var images = {};
-['enemy1.png', 'enemy2.png', 'enemy3.png', 'enemy4.png', 'bg1.png', 'winner.png', 'player.png', 'priceline.png', 'lives.png', 'lifelost.png', 'bonus.png'].forEach(imgName => {
+['enemy1.png', 'enemy2.png', 'enemy3.png', 'enemy4.png', 'enemy5.png', 'enemy6.png', 'bg1.png', 'winner.png', 'player.png', 'priceline.png', 'lives.png', 'lifelost.png', 'bonus.png', 'bonus1.png', 'bonus2.png'].forEach(imgName => {
     var img = document.createElement('img');
     img.src = 'images/' + imgName;
     images[imgName] = img;
@@ -82,7 +87,19 @@ class Render {
     }
 }
 
-// 
+// class for the background price lines animation
+class PriceLine extends Render {
+    constructor(xPos) {
+        super();
+        this.x = 0;
+        this.y = 100;
+        this.sprite = images['priceline.png'];
+    }
+
+    scroll(timeDiff) {
+        this.x = this.x - timeDiff / 5
+    }
+}
 
 // This section is where you will be doing most of your coding
 class Enemy extends Render {
@@ -91,17 +108,19 @@ class Enemy extends Render {
         this.x = xPos;
         this.y = -ENEMY_HEIGHT;
         var baddy;
-
-        for (var i = 0; i < 3; i++) {
-            if (Math.random(i) * 10 <= 3) {
-                baddy = 'enemy1.png';
-            } else if (Math.random(i) * 10 <= 5) {
-                baddy = 'enemy2.png';
-            } else if (Math.random(i) * 10 <= 7) {
-                baddy = 'enemy3.png';
-            } else if (Math.random(i) * 10 <= 10) {
-                baddy = 'enemy4.png';
-            }
+        var randomish = Math.random() * 100
+        if (randomish <= 15) {
+            baddy = 'enemy1.png';
+        } else if (randomish <= 30) {
+            baddy = 'enemy2.png';
+        } else if (randomish <= 45) {
+            baddy = 'enemy3.png';
+        } else if (randomish <= 60) {
+            baddy = 'enemy4.png';
+        } else if (randomish <= 75) {
+            baddy = 'enemy5.png';
+        } else if (randomish <= 100) {
+            baddy = 'enemy6.png';
         }
         this.sprite = images[baddy];
 
@@ -124,8 +143,24 @@ class Bonus extends Render {
         super();
         this.x = xPos;
         this.y = -BONUS_HEIGHT;
-        this.sprite = images['bonus.png'];
-        this.speed = Math.random() + 0.75;
+        var moohla;
+        var multiplier;
+        var randomish = Math.random() * 100
+        if (randomish <= 75) {
+            moohla = 'bonus.png';
+            this.speed = Math.random() + 0.25;
+            multiplier = 1;
+        } else if (randomish <= 95) {
+            moohla = 'bonus2.png';
+            this.speed = Math.random() + 0.4;
+            multiplier = 5;
+        } else if (randomish <= 100) {
+            moohla = 'bonus1.png';
+            this.speed = Math.random() + 0.75;
+            multiplier = 10;
+        }
+        this.sprite = images[moohla];
+        this.bonusMultiplier = multiplier;
     }
 }
 
@@ -162,6 +197,9 @@ class Engine {
     constructor(element) {
         // Setup the player
         this.player = new Player();
+
+        // Setup priceline background
+        this.setUpBG();
 
         // Setup enemies, making sure there are however many specified
         this.setupEnemies();
@@ -205,18 +243,6 @@ class Engine {
         // }
     }
 
-    // // drastic copy of adding enemies replacing with lives, need to remove this whole function
-    // addLives() {
-    //     var livesSpots = PLAYER_LIVES;
-    //     var lifeSpot;
-    //     // Keep looping until we find a free life spot at random
-    //     while (this.lives[lifeSpot]) {
-    //         lifeSpot = Math.floor(Math.random() * livesSpots);
-    //     }
-
-    //     this.lives[lifeSpot] = new Lives(lifeSpot * PLAYER_WIDTH);
-    // }
-
     // drastic copying of the enemies concept to replicate the same array and drop approach
     setupBonuses() {
         if (!this.bonuses) {
@@ -238,7 +264,7 @@ class Engine {
             bonusSpot = Math.floor(Math.random() * bonusSpots);
         }
 
-        this.bonuses[bonusSpot] = new Bonus(bonusSpot * BONUS_WIDTH);
+        this.bonuses[bonusSpot] = new Bonus(bonusSpot * BONUS_WIDTH, );
     }
 
     setupEnemies() {
@@ -263,7 +289,19 @@ class Engine {
         }
 
         this.enemies[enemySpot] = new Enemy(enemySpot * ENEMY_WIDTH); // did a - enemy width to start at x=0 - ENEMY_WIDTH
-        //console.log(enemySpot * ENEMY_WIDTH);
+    }
+
+    // This Method allows the background price line to be animated
+    setUpBG() {
+        if (!this.backgrounds) {
+            this.backgrounds = [];
+        }
+
+        this.addBG();
+    }
+
+    addBG(timediff) {
+        this.backgrounds[0] = new PriceLine();  
     }
 
     // This method kicks off the game and listens for input but not much else
@@ -304,27 +342,35 @@ class Engine {
 
         // Increase the score! - This is the earn your money version :)
         // this.score += timeDiff;
-        if (this.isPlayerRich()) {
-            this.score += 1000;
-            //console.log
-        }
+        // if (this.isPlayerRich()) {
+        //     this.score += BONUS_FLOOR;
+        //     //console.log
+        // }
+        this.isPlayerRich();
+
         // Call update on all enemies
         this.enemies.forEach(enemy => enemy.update(timeDiff));
 
         // Call the same update for my Bonus Moohla
         this.bonuses.forEach(bonus => bonus.update(timeDiff));
 
-
-
-
+        // call update for priceline
+        this.backgrounds.forEach(bg => bg.scroll(timeDiff));
+        
+        if (this.backgrounds[0].x <= -3600) {
+            this.backgrounds[0].x = 0;
+        }
 
         // Draw everything!
-        this.ctx.drawImage(images['bg1.png'], 0, 0); // draw the star bg
-        this.ctx.drawImage(images['priceline.png'], 0, 0);
+        this.ctx.drawImage(images['bg1.png'], 0, 0); // draw the background
+        //this.ctx.drawImage(images['priceline.png'], 0, 0);
+        //this.backgrounds.forEach(background => background.scroll(this.ctx));
+        this.backgrounds.forEach(background => background.render(this.ctx));
         this.enemies.forEach(enemy => enemy.render(this.ctx)); // draw the enemies
         this.player.render(this.ctx); // draw the player
-        this.lives.forEach(lives => lives.render(this.ctx)); //draw the lives
         this.bonuses.forEach(bonus => bonus.render(this.ctx)); // draw the bonuses
+        this.lives.forEach(lives => lives.render(this.ctx)); //draw the lives
+
 
         // Check if any enemies should die
         this.enemies.forEach((enemy, enemyIdx) => {
@@ -344,14 +390,14 @@ class Engine {
 
         // Check if they've earned another life - no worky yet
         // this.extraLife();
-        
+
         // Check if player is dead
 
         if (this.isPlayerDead() && PLAYER_LIVES == 1) {
             // If no more lives then really dead, then it's game over!
-            this.ctx.font = 'bold 60px Impact';
-            this.ctx.fillStyle = '#D900D9';
-            this.ctx.fillText("YOU SCORED $" + this.score + ' AND CRASHED!!', 200, GAME_HEIGHT / 2 - 100);
+            this.ctx.font = 'bold 60px Lato';
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.fillText("YOU SCORED $" + this.score + ' AND CRASHED!!', 50, GAME_HEIGHT / 2 - 100);
             this.ctx.fillText('GAME OVER', 450, GAME_HEIGHT / 2);
             this.ctx.fillText('GO BACK TO YOUR DAY JOB', 275, GAME_HEIGHT / 2 + 100);
             document.removeEventListener('keydown', spacebar); //doesn't seem to work
@@ -364,16 +410,17 @@ class Engine {
             // Reduce the players lives by 1
             this.removeLife();
 
-            this.ctx.font = 'bold 50px Impact';
-            this.ctx.fillStyle = '#D900D9';
-            this.ctx.fillText("SCORE: " + this.score, 20, 75);
+            this.ctx.font = 'bold 50px Lato';
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.fillText("SCORE: $" + this.score, 20, 75);
             this.ctx.fillText("LIVES: ", GAME_WIDTH - 375, 75)
-            this.ctx.fillText('MARKET CRASH ! YOU LOST 30%', 300, GAME_HEIGHT / 2 - 100);
-            this.ctx.fillText('PRESS SPACE TO CONTINUE', 350, GAME_HEIGHT / 2);
+            this.ctx.fillText('MARKET CRASH ! YOU LOST 30%', 200, GAME_HEIGHT / 2 - 100);
+            this.ctx.fillText('PRESS SPACE TO CONTINUE', 250, GAME_HEIGHT / 2);
             this.score = Math.round(this.score / 100) * 70;
+            collision.load();
             collision.play();
 
-            
+
 
             var spacebar = e => {
                 if (e.keyCode === SPACE_BAR) {
@@ -388,21 +435,20 @@ class Engine {
 
         } else if (this.score >= getBtcPrice()) {
             this.ctx.drawImage(images['winner.png'], 0, 0); // draw the star bg
-            this.ctx.font = 'bold 250px Impact';
-            this.ctx.fillStyle = '#D900D9';
-            this.ctx.fillText('WINNER !!', 100, GAME_HEIGHT / 2 + 100);
-
-            this.ctx.font = 'bold 50px Impact';
-            this.ctx.fillStyle = '#D900D9';
-            this.ctx.fillText('You exceeded the btc price of $' + getBtcPrice() + ' for today', 100, 100);
+            this.ctx.font = 'bold 240px Lato';
+            this.ctx.fillStyle = '#FE470D';
+            this.ctx.fillText('WINNER!!', 25, GAME_HEIGHT / 2 + 100);
+            this.ctx.font = 'bold 50px Lato';
+            this.ctx.fillStyle = '#FE470D';
+            this.ctx.fillText('You exceeded the btc price of $' + getBtcPrice() + ' for today', 75, 100);
             cheer.play();
             this.wipeOutEverything();
-        
+
         } else {
             // If player is not dead, then draw the score
-            this.ctx.font = 'bold 50px Impact';
-            this.ctx.fillStyle = '#D900D9';
-            this.ctx.fillText("SCORE: " + this.score, 20, 75);
+            this.ctx.font = 'bold 50px Lato';
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.fillText("SCORE: $" + this.score, 20, 75);
             this.ctx.fillText("LIVES: ", GAME_WIDTH - 375, 75)
 
             // Set the time marker and redraw
@@ -433,6 +479,7 @@ class Engine {
                 //have to reload the sound before playing it again incase two bonuses are collected at the same time, otherwise it will only play one and the second sounds weird.
                 chaching.load();
                 chaching.play();
+                this.score += BONUS_FLOOR * bonus.bonusMultiplier;
                 return true;
             }
         })
@@ -455,10 +502,10 @@ class Engine {
         });
     }
 
-    removeLife () {
+    removeLife() {
         PLAYER_LIVES -= 1;
         // this.lives.splice(START_LIVES - PLAYER_LIVES, 1, this.lives.sprite = images['lifelost.png']);
-        delete this.lives[START_LIVES - PLAYER_LIVES] 
+        delete this.lives[START_LIVES - PLAYER_LIVES]
         console.log("After decrement " + PLAYER_LIVES);
     }
 

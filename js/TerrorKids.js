@@ -4,7 +4,8 @@ Spacebar Restart bug - once called, the listener will always respond, can't seem
 Alternating Enemies/kids
 Change player imaage if hit 
 concept of 3 lives. (Remove icon at top when loss.) 
-
+scrolling background loop
+Increasing difficulty based on score (multiple speed by score/100), multiply enemies by score as well?
 */
 
 // This sectin contains some game constants. It is not super interesting

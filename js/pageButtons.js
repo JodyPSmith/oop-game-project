@@ -1,5 +1,4 @@
 function reloadPage() {
-    console.log("This will restart the page");
     location.reload();
 }
 

@@ -1,5 +1,5 @@
 body {
-    background : #04b333;
+    background : #535362;
     min-width: 1200px;
     font-family: 'Lato' , sans-serif;
     font-size : x-large;
@@ -10,10 +10,14 @@ body {
     margin : 1vw;
     padding : 1vh;
 }
-.game {
+.gamerow {
     display : flex;
     justify-content: center;
 
+}
+
+.game { 
+    max-width: 1200;
 }
 
 .buttons {
@@ -23,16 +27,17 @@ body {
     padding : 1vh;
 }
 #canvas{
-    border-style: double;
-    border-color: #D900D9;
+    border-style: groove;
+    border-width: 7px;
+    border-color: white;
 }
 #god {
     margin : 1vh;
     padding: 1vh;
     width : 10vw;
     border : solid;
-    background : #ffc72e;
-    border-color : #ffc72e;
+    background : #FE470D;
+    border-color : #FE470D;
     border-radius : 10%;
     color: white;
 }
@@ -41,8 +46,8 @@ body {
     padding: 1vh;
     width : 10vw;
     border : solid;
-    background : #ffc72e;
-    border-color : #ffc72e;
+    background : #FE470D;
+    border-color : #FE470D;
     border-radius : 10%;
     color: white;
 }
@@ -52,8 +57,8 @@ body {
     padding: 1vh;
     width : 10vw;
     border : solid;
-    background : #ffc72e;
-    border-color : #ffc72e;
+    background : #FE470D;
+    border-color : #FE470D;
     border-radius : 10%;
     color: white;
 }
@@ -62,8 +67,8 @@ body {
     padding: 1vh;
     width : 10vw;
     border : solid;
-    background : #ffc72e;
-    border-color : #ffc72e;
+    background : #FE470D;
+    border-color : #FE470D;
     border-radius : 10%;
     color: white;
 }
@@ -73,8 +78,8 @@ body {
     padding: 1vh;
     width : 10vw;
     border : solid;
-    background : #ffc72e;
-    border-color : #ffc72e;
+    background : #FE470D;
+    border-color : #FE470D;
     border-radius : 10%;
     color: white;
    
